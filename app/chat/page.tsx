@@ -18,27 +18,12 @@ export default function Home() {
 
         {/* chat section */}
         <section className="bg-green-500 col-span-3 flex justify-center">
-          {/* <div className="flex items-end mb-4 w-full max-w-screen-lg">
-            <input
-              placeholder="Type your message..."
-              className="py-3 px-4 w-full rounded-lg border-none focus:outline-none focus:ring focus:border-blue-300 bg-gray-100"
-            ></input>
-          </div> */}
-
-          {/* <div className="flex justify-around mb-8 items-end w-[70%]">
-            <input placeholder="type your message..." className="w-full px-4 py-2 border rounded-md border-blue-900 bg-stone-200" />
-            <button type="submit">send</button>
-          </div> */}
-
-
-
-
-{/* message input  */}
+          {/* message input  */}
           <div className="flex justify-between items-end w-[70%] mb-8">
             <input
               placeholder="Type your message..."
               // className="w-4/5 px-4 py-2 border rounded-md border-blue-900 bg-stone-200"
-              className="w-3/4 px-4 py-2 border rounded-md border-blue-900 bg-gray-200 focus:outline-none focus:ring focus:border-blue-300"
+              className="w-3/4 px-4 py-2 border rounded-md border-blue-900 bg-gray-200 focus:outline-none focus:ring focus:border-blue-900"
             />
             <button
               type="submit"
