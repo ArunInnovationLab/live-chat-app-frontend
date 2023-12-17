@@ -21,7 +21,7 @@ export default function Chat() {
   useEffect(() => {
     // Call connectUser when the component mounts
     connectUser();
-    findAndDisplayConnectedUsers();
+    // findAndDisplayConnectedUsers();
 
     // Cleanup function (optional)
     return () => {
@@ -36,7 +36,7 @@ export default function Chat() {
 
     // After handling the submission, redirect to the homepage
 
-    const socket = new SockJS("http://localhost:8081/ws");
+    const socket = new SockJS("http://localhost:8080/ws");
     const stompClient = Stomp.over(socket);
 
     stompClient.connect(
@@ -60,7 +60,7 @@ export default function Chat() {
 
         //register the connected user
         stompClient.send(
-          "app/user.addUser",
+          "http://localhost:8080/app/user.addUser",
           {},
           JSON.stringify({
             nickName: nickname,
@@ -68,16 +68,37 @@ export default function Chat() {
             status: "ONLINE",
           })
         );
+        // try {
+        //   const userPayload = {
+        //     nickName: nickname,
+        //     fullName: realName,
+        //     status: "ONLINE",
+        //   };
+        //   const userPayloadString = JSON.stringify(userPayload);
+
+        //   stompClient.send(
+        //     'http://localhost:8080/app/user.addUser',
+        //     {},
+        //     userPayloadString
+        //   );
+
+        //   console.log("usr added ");
+        // } catch (error) {
+        //   console.error("Error sending user registration:", error);
+        // }
       },
 
       //on error
-      () => {}
+      // () => {}
+      () => {
+        console.error("WebSocket connection error:");
+      }
     );
   };
 
   // find and display connected users
   async function findAndDisplayConnectedUsers() {
-    const connectedUsersResponse = await fetch("/users");
+    const connectedUsersResponse = await fetch("http://localhost:8080/users");
     const connectedUsers: User[] = await connectedUsersResponse.json();
     const filteredUsers: User[] = connectedUsers.filter(
       (user: User) => user.nickName !== nickname
