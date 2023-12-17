@@ -1,84 +1,21 @@
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import SockJS from "sockjs-client";
-import { Stomp } from "@stomp/stompjs";
-
-interface User {
-  nickName: string;
-  realName: string;
-}
 
 function Login() {
   const [nickname, setNickname] = useState("");
   const [realName, setRealName] = useState("");
-  const [stompClient, setStompClient] = useState(null);
 
   const router = useRouter();
 
-  const connectUser = (e: React.FormEvent<HTMLFormElement>) => {
-    // Your form submission logic here
-
-    // For example, you can store data in a state, local storage, or make an API call
-
-    // After handling the submission, redirect to the homepage
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    const socket = new SockJS("http://localhost:8080/ws");
-    const stompClient = Stomp.over(socket);
-
-    stompClient.connect(
-      {},
-
-      //on user connected
-      () => {
-        stompClient.subscribe(
-          `/user/${nickname}/queue/messages`,
-
-          //on message receiver
-          () => {}
-        );
-
-        stompClient.subscribe(
-          `user/public`,
-
-          //on message received
-          () => {}
-        );
-
-        //register the connected user
-        stompClient.send(
-          "app/user.addUser",
-          {},
-          JSON.stringify({
-            nickName: nickname,
-            fullName: realName,
-            status: "ONLINE",
-          })
-        );
-      },
-
-      //on error
-      () => {}
-    );
-
-    // router.push("/chat");
+    router.push(`/chat?nickname=${nickname}&realName=${realName}`);
   };
-
-  // find and display connected users
-  async function findAndDisplayConnectedUsers() {
-    const connectedUsersResponse = await fetch("/users");
-    let connectedUsers: User[] = await connectedUsersResponse.json();
-    connectedUsers = connectedUsers.filter(
-      (user: User) => user.nickName !== nickname
-    );
-
-    
-  }
 
   return (
     <div className="bg-red-900 flex items-center justify-center h-screen ">
       <div className="bg-white text-black w-96 h-96 rounded-lg shadow-inner shadow-2xl shadow-white">
-        <form onSubmit={connectUser}>
+        <form onSubmit={handleSubmit}>
           <div className="flex justify-center text-3xl text-center mt-8 font-bold">
             Enter Chat Room
           </div>
