@@ -28,6 +28,7 @@ export default function Chat() {
       // Perform cleanup if needed (e.g., disconnecting from the socket)
     };
   }, []); // Empty dependency array means this effect runs once when the component mounts
+  const baseUrl = "http://localhost:8081";
 
   const connectUser = () => {
     // Your form submission logic here
@@ -35,8 +36,7 @@ export default function Chat() {
     // For example, you can store data in a state, local storage, or make an API call
 
     // After handling the submission, redirect to the homepage
-
-    const socket = new SockJS("http://localhost:8080/ws");
+    const socket = new SockJS("http://localhost:8081/ws");
     const stompClient = Stomp.over(socket);
 
     stompClient.connect(
@@ -52,7 +52,7 @@ export default function Chat() {
         );
 
         stompClient.subscribe(
-          `user/public`,
+          "user/public",
 
           //on message received
           () => {}
@@ -60,7 +60,7 @@ export default function Chat() {
 
         //register the connected user
         stompClient.send(
-          "http://localhost:8080/app/user.addUser",
+          "/app/user.addUser",
           {},
           JSON.stringify({
             nickName: nickname,
@@ -68,24 +68,8 @@ export default function Chat() {
             status: "ONLINE",
           })
         );
-        // try {
-        //   const userPayload = {
-        //     nickName: nickname,
-        //     fullName: realName,
-        //     status: "ONLINE",
-        //   };
-        //   const userPayloadString = JSON.stringify(userPayload);
 
-        //   stompClient.send(
-        //     'http://localhost:8080/app/user.addUser',
-        //     {},
-        //     userPayloadString
-        //   );
-
-        //   console.log("usr added ");
-        // } catch (error) {
-        //   console.error("Error sending user registration:", error);
-        // }
+        console.log("usr added ");
       },
 
       //on error
@@ -98,7 +82,7 @@ export default function Chat() {
 
   // find and display connected users
   async function findAndDisplayConnectedUsers() {
-    const connectedUsersResponse = await fetch("http://localhost:8080/users");
+    const connectedUsersResponse = await fetch("/users");
     const connectedUsers: User[] = await connectedUsersResponse.json();
     const filteredUsers: User[] = connectedUsers.filter(
       (user: User) => user.nickName !== nickname
