@@ -1,25 +1,15 @@
-// import { useClient } from "next/client";
-
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import Link from "next/link";
-function Login() {
-  // Use useClient to mark this component as a client component
-  //   useClient();
 
+function Login() {
   const [nickname, setNickname] = useState("");
   const [realName, setRealName] = useState("");
+
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    // Your form submission logic here
-
-    // For example, you can store data in a state, local storage, or make an API call
-
-    // After handling the submission, redirect to the homepage
     e.preventDefault();
-
-    router.push("/chat");
+    router.push(`/chat?nickname=${nickname}&realName=${realName}`);
   };
 
   return (
@@ -68,8 +58,9 @@ function Login() {
 
           <div className="flex justify-center mt-8 mx-10">
             <button
+              // disabled={!nickname || !realName}
               type="submit"
-              className="font-bold text-white rounded-md hover:bg-blue-500 bg-blue-800 py-2 w-full "
+              className="font-bold text-white hover:bg-blue-500 rounded-md bg-blue-800 py-2 w-full "
             >
               Enter
             </button>
