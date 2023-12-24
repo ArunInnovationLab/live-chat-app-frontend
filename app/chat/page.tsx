@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import SockJS from "sockjs-client";
 import { Stomp } from "@stomp/stompjs";
 import { useEffect, useState } from "react";
+import toast, { Toaster } from "react-hot-toast";
 
 interface User {
   nickName: string;
@@ -22,6 +23,7 @@ export default function Chat() {
   const socket = new SockJS(`${baseURL}/ws`);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<String[]>([]);
+  const [activeIndex, setActiveIndex] = useState<String | null>(null);
 
   const handleSend = () => {
     if (message.trim() !== "") {
@@ -70,6 +72,7 @@ export default function Chat() {
         );
 
         console.log("usr added ");
+        toast.success("Connected!");
       },
 
       //on error
@@ -91,6 +94,15 @@ export default function Chat() {
     console.log(filteredUsers);
   }
 
+  // find and display user chat
+  // async function findAndDisplayUserChat(){
+  //   const userChatResponse = await fetch(`${baseURL}/messages/${nickname}/${activeIndex}`)
+  // }
+
+  // useEffect(()=>{
+  //   findAndDisplayUserChat();
+  // }, [activeIndex])
+
   return (
     <div className="md:m-2">
       <header className="flex justify-between items-center bg-red-600">
@@ -111,13 +123,22 @@ export default function Chat() {
 
       <main className="grid grid-cols-4 md:mt-2 md:gap-2 h-[75vh]">
         {/* members section  */}
-        <section className="bg-blue-500 ">
+        <section className="bg-blue-500 overflow-scroll">
           <h2 className="text-white text-center text-lg font-bold mt-4 mb-2">
             Connected Users
           </h2>
           <ul>
-            {connectedUsers.map((user, index) => (
-              <li key={index} className="text-white text-center font-bold">
+            {connectedUsers.map((user) => (
+              // <li key={index} className="text-white py-2 bg-black text-center mt-4 hover:bg-slate-500 active:bg-slate-500 focus:bg-slate-500 font-bold">
+              //   {user.nickName}
+              // </li>
+              <li
+                key={user.nickName}
+                className={`text-white py-4 text-center mt-1 rounded  hover:bg-slate-500 focus:bg-slate-500 font-bold ${
+                  activeIndex === user.nickName ? "bg-slate-500" : "bg-red-300"
+                }`}
+                onClick={() => setActiveIndex(user.nickName)}
+              >
                 {user.nickName}
               </li>
             ))}
@@ -132,7 +153,7 @@ export default function Chat() {
           {messages.map((msg, index) => (
             <div
               key={index}
-              className="text-white font-bold  mb-4 mr-56 text-right"
+              className="text-white font-bold mb-4 mr-56 text-right"
             >
               {msg}
             </div>
@@ -156,6 +177,7 @@ export default function Chat() {
           </div>
         </section>
       </main>
+      <Toaster />
     </div>
   );
 }
