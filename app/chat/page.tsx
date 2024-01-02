@@ -269,6 +269,7 @@ import SockJS from "sockjs-client";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import Stomp from "stompjs";
+import { useRouter } from "next/navigation";
 
 interface User {
   nickName: string;
@@ -291,8 +292,11 @@ export default function Chat() {
   const [receiverMessages, setReceiverMessages] = useState<String[]>([]);
   const [activeIndex, setActiveIndex] = useState<String | null>(null);
 
+  const router = useRouter();
+
   const [stompClient, setStompClient] = useState<any>(null);
   const socket = new SockJS(`${baseURL}/ws`);
+
   const connectToWebSocket = () => {
     const stomp = Stomp.over(socket);
 
@@ -302,6 +306,7 @@ export default function Chat() {
         (frame) => {
           console.log("WebSocket connected");
           setStompClient(stomp);
+
           subscribeToUserTopics(stomp);
 
           if (nickname && realName) {
@@ -322,7 +327,10 @@ export default function Chat() {
 
   const disconnectFromWebSocket = () => {
     if (stompClient) {
+      console.log("stomp client : ", stompClient);
       stompClient.disconnect();
+      setStompClient(null); // Set stompClient to null after disconnecting
+      console.log("disconnected web socket");
     }
   };
 
@@ -336,13 +344,12 @@ export default function Chat() {
   }, [nickname, realName]);
 
   const subscribeToUserTopics = (stomp: any) => {
-    const userId = nickname; // Assuming nickname is used as the user identifier
+    const userId = nickname; // use same label 'userId' as specified in destination channel at server
     const topic = `/user/${userId}/topic`;
 
     stomp.subscribe(topic, (message: any) => {
       const user: User = JSON.parse(message.body);
       console.log("Received user object from server:", user);
-      // Handle the received user object as needed
     });
   };
 
@@ -376,6 +383,16 @@ export default function Chat() {
           {" "}
           Hi {nickname} {realName}
         </p>
+
+        <button
+          onClick={() => {
+            disconnectFromWebSocket();
+            router.push("/");
+          }}
+          className="text-white"
+        >
+          Logout
+        </button>
         <p
           className="py-4 text-base sm:text-lg md:text-xl xl:text-2xl font-bold text-center text-white"
           style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)" }}
