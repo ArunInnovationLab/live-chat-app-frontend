@@ -90,20 +90,42 @@ function Login() {
 
   const [stompClient, setStompClient] = useState<any>(null);
 
+  // const connectToWebSocket = () => {
+  //   const socket = new SockJS("http://localhost:8081/ws");
+  //   const stomp = Stomp.over(socket);
+
+  //   return new Promise<void>((resolve) => {
+  //     stomp.connect({}, () => {
+  //       console.log("WebSocket connected");
+
+  //       setStompClient(stomp);
+  //       subscribeToUserTopic(stomp);
+  //       resolve();
+  //     });
+  //   });
+  // };
+
   const connectToWebSocket = () => {
     const socket = new SockJS("http://localhost:8081/ws");
     const stomp = Stomp.over(socket);
-
-    return new Promise<void>((resolve) => {
-      stomp.connect({}, () => {
-        console.log("WebSocket connected");
-
-        setStompClient(stomp);
-        subscribeToUserTopic(stomp);
-        resolve();
-      });
+  
+    return new Promise((resolve, reject) => {
+      stomp.connect(
+        {},
+        () => {
+          console.log("WebSocket connected");
+          setStompClient(stomp);
+          subscribeToUserTopic(stomp);
+          resolve(stomp);
+        },
+        (error) => {
+          console.error("WebSocket connection error:", error);
+          reject(error);
+        }
+      );
     });
   };
+  
 
   const disconnectFromWebSocket = () => {
     if (stompClient) {
@@ -120,20 +142,64 @@ function Login() {
     };
   }, []);
 
+  // const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   await connectToWebSocket();
+
+  //   // stompClient.send(
+  //   //   "/app/user.addUser",
+  //   //   {},
+  //   //   JSON.stringify({
+  //   //     nickName: nickname,
+  //   //     fullName: realName,
+  //   //     status: "ONLINE",
+  //   //   })
+  //   // );
+  //   if (stompClient) {
+  //     // Send a message to the server to add the user
+  //     stompClient.send(
+  //       "/app/user.addUser",
+  //       {},
+  //       JSON.stringify({
+  //         nickName: nickname,
+  //         fullName: realName,
+  //         status: "ONLINE",
+  //       })
+  //     );
+  //   } else {
+  //     console.error("WebSocket connection is null");
+  //     // Handle the case where stompClient is null
+  //   }
+  // };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    await connectToWebSocket();
+  
+    try {
+      const connectedStompClient = await connectToWebSocket();
+  
+      // Send a message to the server to add the user
 
-    stompClient.send(
-      "/app/user.addUser",
-      {},
-      JSON.stringify({
-        nickName: nickname,
-        fullName: realName,
-        status: "ONLINE",
-      })
-    );
+      if(connectedStompClient){
+        stompClient.send(
+          "/app/user.addUser",
+          {},
+          JSON.stringify({
+            nickName: nickname,
+            fullName: realName,
+            status: "ONLINE",
+          })
+        );
+      }
+      
+  
+     
+    } catch (error) {
+      console.error("Error connecting to WebSocket:", error);
+      // Handle the error connecting to WebSocket
+    }
   };
+  
 
   const subscribeToUserTopic = (stomp: any) => {
     const userId = nickname; // Assuming nickname is used as the user identifier
@@ -141,7 +207,7 @@ function Login() {
 
     stomp.subscribe(topic, (message: any) => {
       const user: User = JSON.parse(message.body);
-      console.log("Received user object:", user);
+      console.log("Received user object from server:", user);
       // Handle the received user object as needed
     });
   };
