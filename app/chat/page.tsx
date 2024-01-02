@@ -266,10 +266,9 @@
 
 import { useSearchParams } from "next/navigation";
 import SockJS from "sockjs-client";
-import { CompatClient, Stomp } from "@stomp/stompjs";
 import { useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { client } from "stompjs";
+import Stomp from "stompjs";
 
 interface User {
   nickName: string;
@@ -281,13 +280,10 @@ const baseURL = "http://localhost:8081";
 export default function Chat() {
   const searchParams = useSearchParams();
 
-  const [stompClient, setStompClient] = useState<CompatClient | null>(null);
-
   const nickname = searchParams?.get("nickname");
   const realName = searchParams?.get("realName");
 
   const [connectedUsers, setConnectedUsers] = useState<User[]>([]);
-  const socket = new SockJS(`${baseURL}/ws`);
   const [senderMessage, setSenderMessage] = useState("");
   const [senderMessages, setSenderMessages] = useState<String[]>([]);
 
@@ -295,28 +291,65 @@ export default function Chat() {
   const [receiverMessages, setReceiverMessages] = useState<String[]>([]);
   const [activeIndex, setActiveIndex] = useState<String | null>(null);
 
-  //
-  const connectUser = () => {
-    const client = Stomp.over(socket);
-    client.connect(
-      {},
+  const [stompClient, setStompClient] = useState<any>(null);
+  const socket = new SockJS(`${baseURL}/ws`);
+  const connectToWebSocket = () => {
+    const stomp = Stomp.over(socket);
 
-      //on user connected
-      () => {
-        setStompClient(client);
+    return new Promise((resolve, reject) => {
+      stomp.connect(
+        {},
+        (frame) => {
+          console.log("WebSocket connected");
+          setStompClient(stomp);
+          subscribeToUserTopics(stomp);
 
-        client.subscribe(
-          "user/messages",
-
-          //on message received
-          (payload) => {
-            const user = JSON.parse(payload.body);
-            console.log("Connected User:", user);
+          if (nickname && realName) {
+            saveUser(nickname, realName, stomp);
+          } else {
+            console.error("Nickname or realName is null or undefined");
           }
-        );
 
-        //register the connected user
-        client.send(
+          resolve(stomp);
+        },
+        (error: any) => {
+          console.error("WebSocket connection error:", error);
+          reject(error);
+        }
+      );
+    });
+  };
+
+  const disconnectFromWebSocket = () => {
+    if (stompClient) {
+      stompClient.disconnect();
+    }
+  };
+
+  useEffect(() => {
+    connectToWebSocket();
+
+    // Clean up the WebSocket connection when the component unmounts
+    return () => {
+      disconnectFromWebSocket();
+    };
+  }, [nickname, realName]);
+
+  const subscribeToUserTopics = (stomp: any) => {
+    const userId = nickname; // Assuming nickname is used as the user identifier
+    const topic = `/user/${userId}/topic`;
+
+    stomp.subscribe(topic, (message: any) => {
+      const user: User = JSON.parse(message.body);
+      console.log("Received user object from server:", user);
+      // Handle the received user object as needed
+    });
+  };
+
+  const saveUser = (nickname: string, realName: string, stomp: any) => {
+    if (stomp) {
+      if (nickname && realName) {
+        stomp.send(
           "/app/user.addUser",
           {},
           JSON.stringify({
@@ -325,27 +358,13 @@ export default function Chat() {
             status: "ONLINE",
           })
         );
-      },
-
-      //on error
-      // () => {}
-      () => {
-        console.error("WebSocket connection error:");
+      } else {
+        console.error("Nickname or realName is null");
       }
-    );
-  };
-
-  useEffect(() => {
-    connectUser();
-
-    if (stompClient) {
-      stompClient.subscribe("/user/messages", (payload) => {
-        const confirmationMessage = JSON.parse(payload.body);
-        // Handle the confirmation message (e.g., show a toast)
-        toast.success(confirmationMessage);
-      });
+    } else {
+      console.error("Stomp client is null");
     }
-  }, [nickname, realName,]);
+  };
 
   return (
     <div className="md:m-2">
