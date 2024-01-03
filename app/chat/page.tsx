@@ -274,6 +274,7 @@ import { useRouter } from "next/navigation";
 interface User {
   nickName: string;
   realName: string;
+  status: string;
 }
 
 const baseURL = "http://localhost:8081";
@@ -300,29 +301,32 @@ export default function Chat() {
   const connectToWebSocket = () => {
     const stomp = Stomp.over(socket);
 
-    return new Promise((resolve, reject) => {
-      stomp.connect(
-        {},
-        (frame) => {
-          console.log("WebSocket connected");
-          setStompClient(stomp);
+    // return new Promise((resolve, reject) => {
+    stomp.connect(
+      {},
+      () => {
+        console.log("WebSocket connected");
+        setStompClient(stomp);
 
-          subscribeToUserTopics(stomp);
+        subscribeToUserTopics(stomp);
 
-          if (nickname && realName) {
-            saveUser(nickname, realName, stomp);
-          } else {
-            console.error("Nickname or realName is null or undefined");
-          }
-
-          resolve(stomp);
-        },
-        (error: any) => {
-          console.error("WebSocket connection error:", error);
-          reject(error);
+        if (nickname && realName) {
+          saveUser(nickname, realName, stomp);
+        } else {
+          console.error("Nickname or realName is null or undefined");
         }
-      );
-    });
+
+        //find and display online users
+        findAndDisplayConnectedUsers();
+
+        // resolve(stomp);
+      },
+      (error: any) => {
+        console.error("WebSocket connection error:", error);
+        // reject(error);
+      }
+    );
+    // });
   };
 
   const disconnectFromWebSocket = () => {
@@ -352,6 +356,16 @@ export default function Chat() {
       console.log("Received user object from server:", user);
     });
   };
+
+  async function findAndDisplayConnectedUsers() {
+    const connectedUsrsResponse = await fetch(`${baseURL}/users`)
+    const connectedUsrs: User[] = await connectedUsrsResponse.json();
+    const filteredUsers: User[] = connectedUsrs.filter(
+      (user: User) => user.nickName !== nickname
+    );
+    setConnectedUsers(filteredUsers);
+    console.log("filtered users", filteredUsers);
+  }
 
   const saveUser = (nickname: string, realName: string, stomp: any) => {
     if (stomp) {
