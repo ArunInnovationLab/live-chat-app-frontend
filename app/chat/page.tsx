@@ -287,11 +287,24 @@ export default function Chat() {
 
   const [connectedUsers, setConnectedUsers] = useState<User[]>([]);
   const [senderMessage, setSenderMessage] = useState("");
-  const [senderMessages, setSenderMessages] = useState<String[]>([]);
 
   const [receiverMessage, setReceiverMessage] = useState("");
-  const [receiverMessages, setReceiverMessages] = useState<String[]>([]);
+
   const [activeIndex, setActiveIndex] = useState<String | null>(null);
+
+  const [senderMessages, setSenderMessages] = useState<string[]>([
+    "Hi there!",
+    "How are you?",
+    "I'm doing well, thanks!",
+    "What about you?",
+  ]);
+
+  const [receiverMessages, setReceiverMessages] = useState<string[]>([
+    "Hello!",
+    "I'm good too, thanks for asking.",
+    "Anything interesting happening?",
+    "Not much, just relaxing.",
+  ]);
 
   const router = useRouter();
 
@@ -358,7 +371,7 @@ export default function Chat() {
   };
 
   async function findAndDisplayConnectedUsers() {
-    const connectedUsrsResponse = await fetch(`${baseURL}/users`)
+    const connectedUsrsResponse = await fetch(`${baseURL}/users`);
     const connectedUsrs: User[] = await connectedUsrsResponse.json();
     const filteredUsers: User[] = connectedUsrs.filter(
       (user: User) => user.nickName !== nickname
@@ -442,27 +455,65 @@ export default function Chat() {
         {/* chat section */}
 
         {activeIndex ? (
-          <section className="bg-green-500 col-span-3 flex flex-col justify-center">
-            {receiverMessages.map((msg, index) => (
-              <div
-                key={index}
-                className="text-white font-black ml-56 text-left"
-              >
-                {msg}
-              </div>
-            ))}
+          // <section className="bg-green-500 col-span-3 flex flex-col justify-center">
+          //   {receiverMessages.map((msg, index) => (
+          //     <div
+          //       key={index}
+          //       className="text-white font-black ml-56 text-left"
+          //     >
+          //       {msg}
+          //     </div>
+          //   ))}
 
-            {senderMessages.map((msg, index) => (
-              <div
-                key={index}
-                className="text-white font-bold mb-4 mr-56 text-right"
-              >
-                {msg}
-              </div>
-            ))}
+          //   {senderMessages.map((msg, index) => (
+          //     <div
+          //       key={index}
+          //       className="text-white font-bold mb-4 mr-56 text-right"
+          //     >
+          //       {msg}
+          //     </div>
+          //   ))}
+
+          //   {/* Message input */}
+          //   <div className="flex items-end mt-auto mx-auto w-[70%] mb-8 ">
+          //     <input
+          //       value={senderMessage}
+          //       onChange={(e) => setSenderMessage(e.target.value)}
+          //       placeholder="Type your message..."
+          //       className="w-3/4 px-4 py-2 border rounded-md border-blue-900 bg-gray-200 focus:outline-none focus:ring focus:border-blue-900"
+          //     />
+          //     <button
+          //       // onClick={handleSend}
+          //       type="button" // Change to "submit" if using a form
+          //       className="w-1/4 ml-4 px-4 py-2  bg-blue-500 text-white rounded-md hover:bg-blue-900 border-blue-500"
+          //     >
+          //       Send
+          //     </button>
+          //   </div>
+          // </section>
+          <section className="bg-green-500 col-span-3 flex flex-col justify-between">
+            <div className="flex flex-col h-full overflow-y-scroll">
+              {receiverMessages.map((msg, index) => (
+                <div
+                  key={index}
+                  className="text-white font-black ml-6 mb-2 text-left"
+                >
+                  {msg}
+                </div>
+              ))}
+
+              {senderMessages.map((msg, index) => (
+                <div
+                  key={index}
+                  className="text-white font-bold mb-2 mr-6 text-right"
+                >
+                  {msg}
+                </div>
+              ))}
+            </div>
 
             {/* Message input */}
-            <div className="flex items-end mt-auto mx-auto w-[70%] mb-8 ">
+            <div className="flex items-end mx-auto w-[70%] mb-8">
               <input
                 value={senderMessage}
                 onChange={(e) => setSenderMessage(e.target.value)}
@@ -470,9 +521,14 @@ export default function Chat() {
                 className="w-3/4 px-4 py-2 border rounded-md border-blue-900 bg-gray-200 focus:outline-none focus:ring focus:border-blue-900"
               />
               <button
-                // onClick={handleSend}
+                onClick={() => {
+                  setSenderMessages((prevData) => {
+                    return [...prevData, senderMessage];
+                  });
+                  setSenderMessage("");
+                }}
                 type="button" // Change to "submit" if using a form
-                className="w-1/4 ml-4 px-4 py-2  bg-blue-500 text-white rounded-md hover:bg-blue-900 border-blue-500"
+                className="w-1/4 ml-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-900 border-blue-500"
               >
                 Send
               </button>
