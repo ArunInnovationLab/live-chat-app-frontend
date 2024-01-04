@@ -293,17 +293,17 @@ export default function Chat() {
   const [activeIndex, setActiveIndex] = useState<String | null>(null);
 
   const [senderMessages, setSenderMessages] = useState<string[]>([
-    "Hi there!",
-    "How are you?",
-    "I'm doing well, thanks!",
-    "What about you?",
+    // "Hi there!",
+    // "How are you?",
+    // "I'm doing well, thanks!",
+    // "What about you?",
   ]);
 
   const [receiverMessages, setReceiverMessages] = useState<string[]>([
-    "Hello!",
-    "I'm good too, thanks for asking.",
-    "Anything interesting happening?",
-    "Not much, just relaxing.",
+    // "Hello!",
+    // "I'm good too, thanks for asking.",
+    // "Anything interesting happening?",
+    // "Not much, just relaxing.",
   ]);
 
   const router = useRouter();
@@ -355,16 +355,18 @@ export default function Chat() {
     connectToWebSocket();
 
     // Clean up the WebSocket connection when the component unmounts
-    return () => {
-      disconnectFromWebSocket();
-    };
+    // return () => {
+    //   disconnectFromWebSocket();
+    // };
   }, [nickname, realName]);
 
   const subscribeToUserTopics = (stomp: any) => {
     const userId = nickname; // use same label 'userId' as specified in destination channel at server
-    const topic = `/user/${userId}/topic`;
+    const topic1 = `/user/${userId}/topic`;
 
-    stomp.subscribe(topic, (message: any) => {
+    const topic2 = `/user/${nickname}/queue/messages`;
+
+    stomp.subscribe(topic1, (message: any) => {
       const user: User = JSON.parse(message.body);
       console.log("Received user object from server:", user);
     });
@@ -380,9 +382,43 @@ export default function Chat() {
     console.log("filtered users", filteredUsers);
   }
 
+  async function fetchAndDisplayUserChat(selectedUserId: string) {
+    const userChatResponse = await fetch(
+      `${baseURL}/messages/${nickname}/${selectedUserId}`
+    );
+    const userChat = await userChatResponse.json();
+    userChat.forEach((chat: any) => {
+      console.log("chat.senderId, chat.content", chat.senderId, chat.content);
+    });
+    console.log("user chattttt : ", userChat);
+  }
+
+  const sendMessage = () => {
+    if (senderMessage.trim() !== "") {
+      // Add the message to the list of messages
+      // setSenderMessages([...senderMessages, senderMessage]);
+
+      const chatMessage = {
+        senderId: nickname,
+        recipientId: activeIndex,
+        content: senderMessage,
+        timestamp: new Date()
+      };
+
+      console.log("stomp client in send message function ",stompClient)
+
+      stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));
+
+      // Clear the input field
+      // setSenderMessage("");
+    }
+  };
+
   const saveUser = (nickname: string, realName: string, stomp: any) => {
     if (stomp) {
+      setStompClient(stomp)
       if (nickname && realName) {
+        console.log("stompppppppp",stomp)
         stomp.send(
           "/app/user.addUser",
           {},
@@ -444,7 +480,10 @@ export default function Chat() {
                 className={`text-white py-4 text-center mt-1 rounded  hover:bg-slate-500 focus:bg-slate-500 font-bold ${
                   activeIndex === user.nickName ? "bg-slate-500" : "bg-red-300"
                 }`}
-                onClick={() => setActiveIndex(user.nickName)}
+                onClick={() => {
+                  setActiveIndex(user.nickName);
+                  fetchAndDisplayUserChat(user.nickName);
+                }}
               >
                 {user.nickName}
               </li>
@@ -491,7 +530,7 @@ export default function Chat() {
           //     </button>
           //   </div>
           // </section>
-          <section className="bg-green-500 col-span-3 flex flex-col justify-between">
+          <section className="bg-green-500 col-span-3 flex flex-col justify-between overflow-scroll">
             <div className="flex flex-col h-full overflow-y-scroll">
               {receiverMessages.map((msg, index) => (
                 <div
@@ -515,6 +554,16 @@ export default function Chat() {
             {/* Message input */}
             <div className="flex items-end mx-auto w-[70%] mb-8">
               <input
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    setSenderMessages((prevData) => {
+                      return [...prevData, senderMessage];
+                    });
+                    sendMessage();
+                    setSenderMessage("");
+                  }
+                }}
                 value={senderMessage}
                 onChange={(e) => setSenderMessage(e.target.value)}
                 placeholder="Type your message..."
@@ -525,10 +574,12 @@ export default function Chat() {
                   setSenderMessages((prevData) => {
                     return [...prevData, senderMessage];
                   });
+                  sendMessage();
+
                   setSenderMessage("");
                 }}
                 type="button" // Change to "submit" if using a form
-                className="w-1/4 ml-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-900 border-blue-500"
+                className="w-1/4 ml-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-900 focus:bg-blue-500 border-blue-500"
               >
                 Send
               </button>
