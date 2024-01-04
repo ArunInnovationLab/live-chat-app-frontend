@@ -364,11 +364,18 @@ export default function Chat() {
     const userId = nickname; // use same label 'userId' as specified in destination channel at server
     const topic1 = `/user/${userId}/topic`;
 
-    const topic2 = `/user/${nickname}/queue/messages`;
+    const topic2 = `/user/${userId}/queue/messages`;
 
     stomp.subscribe(topic1, (message: any) => {
       const user: User = JSON.parse(message.body);
       console.log("Received user object from server:", user);
+    });
+
+    stomp.subscribe(topic2, async (messages: any) => {
+      console.log("before invoking function");
+      await findAndDisplayConnectedUsers(); // Ensure proper handling of asynchronous operations
+      console.log("after invoking findAndDisplayConnectedUsers");
+      console.log("received messages on subscriptionsjhdjsgdh ", messages);
     });
   };
 
@@ -402,10 +409,10 @@ export default function Chat() {
         senderId: nickname,
         recipientId: activeIndex,
         content: senderMessage,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
 
-      console.log("stomp client in send message function ",stompClient)
+      console.log("stomp client in send message function ", stompClient);
 
       stompClient.send("/app/chat", {}, JSON.stringify(chatMessage));
 
@@ -416,9 +423,9 @@ export default function Chat() {
 
   const saveUser = (nickname: string, realName: string, stomp: any) => {
     if (stomp) {
-      setStompClient(stomp)
+      setStompClient(stomp);
       if (nickname && realName) {
-        console.log("stompppppppp",stomp)
+        console.log("stompppppppp", stomp);
         stomp.send(
           "/app/user.addUser",
           {},
