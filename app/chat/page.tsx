@@ -98,16 +98,16 @@ export default function Chat() {
 
       const receivedFrame = JSON.parse(message.body);
       const content = receivedFrame.content;
-      // setReceiverMessages((prevData) => {
-      //   return [...prevData, content];
-      // });
-
       setReceiverMessages((prevData: any) => {
-        return [
-          ...prevData,
-          { content: content.content, timestamp: content.timestamp },
-        ];
+        return [...prevData, content];
       });
+
+      // setReceiverMessages((prevData: any) => {
+      //   return [
+      //     ...prevData,
+      //     { content: content.content, timestamp: content.timestamp },
+      //   ];
+      // });
 
       console.log("content.........", content);
       console.log("after invoking findAndDisplayConnectedUsers");
@@ -126,6 +126,8 @@ export default function Chat() {
   }
 
   async function fetchAndDisplayUserChat(selectedUserId: string) {
+    setSenderMessages([]);
+    setReceiverMessages([]);
     const userChatResponse = await fetch(
       `${baseURL}/messages/${nickname}/${selectedUserId}`
     );
@@ -133,17 +135,11 @@ export default function Chat() {
     userChat.forEach((chat: any) => {
       if (chat.senderId === selectedUserId) {
         setReceiverMessages((prevData: any) => {
-          return [
-            ...prevData,
-            { content: chat.content, timestamp: chat.timestamp },
-          ];
+          return [...prevData, chat.content];
         });
       } else {
         setSenderMessages((prevData: any) => {
-          return [
-            ...prevData,
-            { content: chat.content, timestamp: chat.timestamp },
-          ];
+          return [...prevData, chat.content];
         });
       }
 
@@ -263,7 +259,7 @@ export default function Chat() {
                   className="text-white font-black ml-6 mb-2 text-left"
                 >
                   {activeIndex}
-                  {": "} {msg.content}
+                  {": "} {msg}
                 </div>
               ))}
 
@@ -272,7 +268,7 @@ export default function Chat() {
                   key={index}
                   className="text-white font-bold mb-2 mr-6 text-right"
                 >
-                  {msg.content}
+                  {msg}
                   {" :"}
                   {nickname}
                 </div>
@@ -286,10 +282,7 @@ export default function Chat() {
                   if (e.key === "Enter") {
                     e.preventDefault();
                     setSenderMessages((prevData: any) => {
-                      return [
-                        ...prevData,
-                        { content: senderMessage, timestamp: new Date() },
-                      ];
+                      return [...prevData, senderMessage];
                     });
                     sendMessage();
                     setSenderMessage("");
@@ -303,10 +296,7 @@ export default function Chat() {
               <button
                 onClick={() => {
                   setSenderMessages((prevData: any) => {
-                    return [
-                      ...prevData,
-                      { content: senderMessage, timestamp: new Date() },
-                    ];
+                    return [...prevData, senderMessage];
                   });
                   sendMessage();
 
