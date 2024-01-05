@@ -30,6 +30,8 @@ export default function Chat() {
 
   const [receiverMessages, setReceiverMessages] = useState<any>([]);
 
+  const [allMessages, setAllMessages] = useState<any>([]);
+
   const router = useRouter();
 
   const [stompClient, setStompClient] = useState<any>(null);
@@ -81,6 +83,10 @@ export default function Chat() {
     // };
   }, [nickname, realName]);
 
+  useEffect(() => {
+    setAllMessages([...senderMessages, ...receiverMessages]);
+  }, [senderMessages, receiverMessages]);
+
   const subscribeToUserTopics = (stomp: any) => {
     const userId = nickname; // use same label 'userId' as specified in destination channel at server
     const topic1 = `/user/${userId}/topic`;
@@ -98,16 +104,17 @@ export default function Chat() {
 
       const receivedFrame = JSON.parse(message.body);
       const content = receivedFrame.content;
-      setReceiverMessages((prevData: any) => {
-        return [...prevData, content];
-      });
 
-      // setReceiverMessages((prevData: any) => {
-      //   return [
-      //     ...prevData,
-      //     { content: content.content, timestamp: content.timestamp },
-      //   ];
-      // });
+      const timestamp = receivedFrame.timestamp;
+
+      const senderId = receivedFrame.senderId;
+
+      setReceiverMessages((prevData: any) => {
+        return [
+          ...prevData,
+          { content: content, timestamp: timestamp, senderId: senderId },
+        ];
+      });
 
       console.log("content.........", content);
       console.log("after invoking findAndDisplayConnectedUsers");
@@ -135,19 +142,34 @@ export default function Chat() {
     userChat.forEach((chat: any) => {
       if (chat.senderId === selectedUserId) {
         setReceiverMessages((prevData: any) => {
-          return [...prevData, chat.content];
+          return [
+            ...prevData,
+            {
+              content: chat.content,
+              timestamp: chat.timestamp,
+              senderId: chat.senderId,
+            },
+          ];
         });
       } else {
         setSenderMessages((prevData: any) => {
-          return [...prevData, chat.content];
+          return [
+            ...prevData,
+            {
+              content: chat.content,
+              timestamp: chat.timestamp,
+              senderId: chat.senderId,
+            },
+          ];
         });
       }
 
       console.log(
-        "chat.senderId, chat.content, chat.timestamp",
+        "chat.senderId, chat.content, chat.timestamp, chat.senderId",
         chat.senderId,
         chat.content,
-        chat.timestamp
+        chat.timestamp,
+        chat.senderId
       );
     });
     console.log("user chattttt : ", userChat);
@@ -252,27 +274,42 @@ export default function Chat() {
 
         {activeIndex ? (
           <section className="bg-green-500 col-span-3 flex flex-col justify-between overflow-scroll">
-            <div className="flex flex-col  overflow-y-scroll">
-              {receiverMessages.map((msg: any, index: any) => (
-                <div
-                  key={index}
-                  className="text-white font-black ml-6 mb-2 text-left"
-                >
-                  {activeIndex}
-                  {": "} {msg}
-                </div>
-              ))}
-
-              {senderMessages.map((msg: any, index: any) => (
-                <div
-                  key={index}
-                  className="text-white font-bold mb-2 mr-6 text-right"
-                >
-                  {msg}
-                  {" :"}
-                  {nickname}
-                </div>
-              ))}
+            <div className="flex flex-col overflow-y-scroll px-8">
+              {" "}
+              {allMessages
+                .sort(
+                  (a: any, b: any) =>
+                    new Date(a.timestamp).getTime() -
+                    new Date(b.timestamp).getTime()
+                )
+                .map((msg: any, index: any) => (
+                  <div
+                    key={index}
+                    className={`mb-2  ${
+                      msg.senderId === nickname
+                        ? "flex justify-end items-center"
+                        : "flex items-center"
+                    }`}
+                  >
+                    {msg.senderId !== nickname && (
+                      <span className="mr-2 text-gray-500">
+                        {activeIndex}:{" "}
+                      </span>
+                    )}
+                    <div
+                      className={`p-4 rounded-lg max-w-[47vw] ${
+                        msg.senderId === nickname
+                          ? "bg-blue-500 text-white self-end"
+                          : "bg-gray-200 text-black"
+                      }`}
+                    >
+                      <span>{msg.content}</span>
+                    </div>
+                    {msg.senderId === nickname && (
+                      <span className="ml-2 text-gray-500">: {nickname}</span>
+                    )}
+                  </div>
+                ))}
             </div>
 
             {/* Message input */}
@@ -282,7 +319,14 @@ export default function Chat() {
                   if (e.key === "Enter") {
                     e.preventDefault();
                     setSenderMessages((prevData: any) => {
-                      return [...prevData, senderMessage];
+                      return [
+                        ...prevData,
+                        {
+                          content: senderMessage,
+                          timestamp: new Date(),
+                          senderId: nickname,
+                        },
+                      ];
                     });
                     sendMessage();
                     setSenderMessage("");
@@ -296,7 +340,14 @@ export default function Chat() {
               <button
                 onClick={() => {
                   setSenderMessages((prevData: any) => {
-                    return [...prevData, senderMessage];
+                    return [
+                      ...prevData,
+                      {
+                        content: senderMessage,
+                        timestamp: new Date(),
+                        senderId: nickname,
+                      },
+                    ];
                   });
                   sendMessage();
 
