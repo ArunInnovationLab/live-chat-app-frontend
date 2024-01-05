@@ -67,10 +67,22 @@ export default function Chat() {
 
   const disconnectFromWebSocket = () => {
     if (stompClient) {
-      console.log("stomp client : ", stompClient);
+      if (nickname && realName) {
+        console.log("stompppppppp", stompClient);
+        stompClient.send(
+          "/app/user.disconnectUser",
+          {},
+          JSON.stringify({
+            nickName: nickname,
+            fullName: realName,
+            status: "OFFLINE",
+          })
+        );
+      }
+      // console.log("stomp client : ", stompClient);
       stompClient.disconnect();
       setStompClient(null); // Set stompClient to null after disconnecting
-      console.log("disconnected web socket");
+      // console.log("disconnected web socket");
     }
   };
 
