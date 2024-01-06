@@ -382,7 +382,10 @@ export default function Chat() {
                     }
                   }}
                   value={senderMessage}
-                  onChange={(e) => setSenderMessage(e.target.value)}
+                  onChange={(e) => {
+                    const inputText = e.target.value.slice(0, 1200);
+                    setSenderMessage(inputText);
+                  }}
                   className="w-full border-[2px] font-sans px-4 py-3 rounded-xl pl-14 pr-14 focus:outline-none focus:border-blue-700 transition duration-300"
                   type="text"
                   placeholder="Type a message... 🚀"
