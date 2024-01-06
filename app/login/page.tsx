@@ -1,13 +1,8 @@
-"use client"
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
-interface User {
-  nickName: string;
-  realName: string;
-  status: string;
-}
+import toast, { Toaster } from "react-hot-toast";
 
 function Login() {
   const [nickname, setNickname] = useState("");
@@ -16,7 +11,25 @@ function Login() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    router.push(`/chat?nickname=${nickname}&realName=${realName}`);
+
+    // Validate realName (not empty or only spaces)
+    const trimmedRealName = realName.trim();
+    const trimmedNickname = nickname.trim();
+
+    if (trimmedRealName === "") {
+      // Real name is not valid, show an error toast
+      toast.error("Real name cannot be empty or consist only of spaces.");
+      return;
+    } else if (trimmedNickname === "") {
+      // Nickname is not valid, show an error toast
+      toast.error("Nickname cannot be empty or consist only of spaces.");
+      return;
+    }
+
+    // Redirect to the chat page with valid nickname and realName
+    router.push(
+      `/chat?nickname=${trimmedNickname}&realName=${trimmedRealName}`
+    );
   };
 
   return (
@@ -67,13 +80,14 @@ function Login() {
             <button
               // disabled={!nickname || !realName}
               type="submit"
-              className="font-bold text-white hover:bg-blue-500 rounded-md bg-blue-800 py-2 w-full "
+              className="font-bold text-white hover:bg-blue-500 transition duration-300 rounded-md bg-blue-800 py-2 w-full "
             >
               Enter
             </button>
           </div>
         </form>
       </div>
+      <Toaster position="top-right" />
     </div>
   );
 }
