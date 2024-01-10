@@ -14,7 +14,7 @@ interface User {
   status: string;
 }
 
-const baseURL = "http://localhost:8081";
+const baseURL = "http://localhost:5001";
 
 export default function Chat() {
   const searchParams = useSearchParams();
