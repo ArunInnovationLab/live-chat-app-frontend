@@ -14,7 +14,8 @@ interface User {
   status: string;
 }
 
-const baseURL = "http://localhost:5001";
+// const baseURL = "http://localhost:5001";
+const baseURL = "https://chat-app-devv-aef7f6dfe4d9.herokuapp.com"
 
 export default function Chat() {
   const searchParams = useSearchParams();
@@ -417,6 +418,7 @@ export default function Chat() {
           </>
         ) : (
           <div className="self-center text-4xl font-mono">
+            Hi {nickname},
             Find people and start chatting!
           </div>
         )}
