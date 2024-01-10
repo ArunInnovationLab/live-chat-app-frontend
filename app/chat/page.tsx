@@ -101,6 +101,7 @@ export default function Chat() {
     setAllMessages([...senderMessages, ...receiverMessages]);
   }, [senderMessages, receiverMessages]);
 
+  
   const subscribeToUserTopics = (stomp: any) => {
     const userId = nickname;
     const topic1 = `/user/${userId}/topic`;
